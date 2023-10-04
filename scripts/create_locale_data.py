@@ -3,13 +3,16 @@ import shapely
 from shapely.geometry import Point, Polygon
 from shapely import wkt
 import geopandas as gpd
-
+import pyproj
+from shapely.ops import transform
 
 print("loading data")
 
 #import necessary data
 locales_df = pd.read_csv("data\\nz_suburbs_and_localities.csv")
+ta_df = pd.read_csv("data\\ta.csv")
 ece_services_df = pd.read_csv("data\\ece_services.csv")
+
 
 #drop services with bad latitude or longitude data
 ece_services_df = ece_services_df.drop(ece_services_df[ece_services_df['Latitude'] > 90].index)
@@ -21,7 +24,6 @@ ece_services_df = ece_services_df[['Service Name', 'Latitude', 'Longitude', 'Tow
 
 #tidy up territorial authorities
 ece_services_df['Territorial Authority'].replace(['Auckland.*'], 'Auckland', regex=True, inplace=True)
-
 
 #function to calculate the ece capacity for a given locale
 def ece_capacity(locale_pop, locale_ta, locale_poly):
@@ -37,9 +39,6 @@ def ece_capacity(locale_pop, locale_ta, locale_poly):
 
         #get the Polygon for the ta
         polygon = wkt.loads(locale_poly)
-
-        # if (len(ece_services_ta_df) == 0):
-        #     print(locale_ta + " returned " + str(len(ece_services_ta_df)) + " services.")
 
         #iterate through services in the tas covered by the locale
         for item, row in ece_services_ta_df.iterrows():
@@ -64,7 +63,6 @@ def ece_capacity(locale_pop, locale_ta, locale_poly):
                      )
 
         return([ece_capacity, ece_services])
-
 
 #function to calculate the ece demand for a locale
 def ece_demand(population, ece_profile):
@@ -119,6 +117,34 @@ def identify_ta(locale_ta, target_tas):
     
     return (False)
 
+#convert coordinates for polygon
+def convert_coordinates(nztm_poly):
+
+    nztm_poly = wkt.loads(nztm_poly)
+
+    nztm = pyproj.CRS('EPSG:2193')
+    nzgd2000 = pyproj.CRS('EPSG:4167')
+    
+    project = pyproj.Transformer.from_crs(nztm, nzgd2000, always_xy=True).transform
+    nzgd2000_poly = transform(project, nztm_poly)
+
+    return (nzgd2000_poly)
+
+#get regions that this locale is a part of
+def get_ta(poly):
+    ta = ''
+    polygon = wkt.loads(poly)
+
+    for item, row in ta_df.iterrows():
+        region_poly = row['WKT_U']
+
+        if polygon.intersects(region_poly):
+            ta= row['TA2022_V1_00_NAME_ASCII']
+            
+            return ta
+        
+    return ta
+
 print("calculating ece capacity and demand")
 
 #calculate ece capacity for each locale
@@ -130,10 +156,18 @@ locales_df["ece_demand"] = locales_df.apply(lambda row: ece_demand(row['populati
 #identify which locales are within Christchurch City TA
 locales_df['include'] = locales_df.apply(lambda row: identify_ta(row['territorial_authority_ascii'], ['Christchurch City', 'Selwyn District', 'Waimakariri']), axis=1)
 
+
+#convert coordinates for ta polygons
+ta_df['WKT_U'] = ta_df.apply(lambda row: convert_coordinates(row['WKT']), axis =1)
+
+#identify tas the locale polygon falls within
+locales_df["ta"] = locales_df.apply(lambda row: get_ta(row['WKT']), axis =1)
+
+
 #tidy up locales_df into analysis format
 locales_df.drop(['ece_capacity'], inplace=True, axis=1)
 locales_df = pd.concat([locales_df.drop('ece_demand', axis=1),  pd.json_normalize(locales_df['ece_demand'])], axis=1)
-locales_df = locales_df[['WKT', 'id', 'name', 'total_pop', 'U5_pop', 'ece_pop', 'ece_places', 'ece_services', 'ece_capacity', 'include']]
+locales_df = locales_df[['WKT', 'id', 'name', 'total_pop', 'U5_pop', 'ece_pop', 'ece_places', 'ece_services', 'ece_capacity', 'include', 'ta']]
 locales_df['geometry'] = locales_df['WKT'].apply(lambda x: shapely.wkt.loads(x))
 
 #create coordinates column
@@ -152,11 +186,11 @@ print("converting to geojson")
 #convert to geojson
 geojson_df['geometry'] = gpd.GeoSeries.from_wkt(locales_df['WKT'])
 
-geojson_df = geojson_df[locales_df['include'] == True]
-geojson_df = geojson_df[['name', 'ece_services', 'ece_capacity', 'total_pop', 'U5_pop', 'ece_pop', 'geometry']]
+#geojson_df = geojson_df[locales_df['include'] == True]
+geojson_df = geojson_df[['name', 'ece_services', 'ece_capacity', 'total_pop', 'U5_pop', 'ece_pop', 'ta', 'geometry']]
 
 gdf = gpd.GeoDataFrame(geojson_df, geometry='geometry')
-gdf = gdf[['name', 'ece_services', 'total_pop', 'U5_pop', 'ece_pop', 'ece_capacity', 'geometry']]
+gdf = gdf[['name', 'ece_services', 'total_pop', 'U5_pop', 'ece_pop', 'ece_capacity', 'ta', 'geometry']]
 
 # Save the GeoDataFrame to a GeoJSON file (replace 'output.geojson' with your desired file path)
 gdf.to_file('locales.geojson', driver='GeoJSON')

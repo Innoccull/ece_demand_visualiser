@@ -25,7 +25,10 @@ ece_services_df = ece_services_df[ece_services_df['Latitude'].notna()]
 ece_services_df = ece_services_df[ece_services_df['Longitude'].notna()]
 
 #filter ece services to just columns needed
-ece_services_df = ece_services_df[['Service Name', 'Latitude', 'Longitude', 'Town / City', 'General Electorate', 'Street', 'Suburb', 'Town / City', 'Service Type', '20 Hours ECE', 'Equity Index', 'Max. Licenced Positions', 'Under 2\'s']]
+ece_services_df = ece_services_df[['Service Name', 'Latitude', 'Longitude', 'Town / City', 'General Electorate', 'Street', 'Suburb', 'Town / City', 'Territorial Authority', 'Service Type', '20 Hours ECE', 'Equity Index', 'Max. Licenced Positions', 'Under 2\'s']]
+
+#tidy up Auckland ta
+ece_services_df['Territorial Authority'].replace(['Auckland.*'], 'Auckland', regex=True, inplace=True)
 
 #join meshblock and population by meshblock data
 meshblock_df.rename(columns={'MB2020_V1_00' : 'MB_ID'}, inplace=True)
@@ -101,16 +104,26 @@ ece_services_df_dev['pop'] = ece_services_df_dev.apply(lambda row: pop_near(row[
 
 print("summing population complete")
 
+#create tooltip
+ece_services_df_dev['tooltip'] = ece_services_df_dev['Service Name']
+
+#TODO: Check for duiplicate columns in the df, this is causing the creationg of geoJSON to fail
+
+print(ece_services_df_dev.columns)
+
 #save data to df
-ece_services_df_dev.to_csv('ece_services_pop.csv', encoding='utf-8')
+ece_services_df_dev.to_csv('data\\ece_services_pop.csv', encoding='utf-8')
 
 print("updated services df saved")
 
 print("creating GeoJSON representation")
 
 #create a GeoDataFrame from the DataFrame
-ece_services_df_dev['geometry'] = ece_services_df_dev.apply(lambda row: Point(row['Latitude'], row['Longitude']), axis=1)
+ece_services_df_dev['geometry'] = ece_services_df_dev.apply(lambda row: Point(row['Longitude'], row['Latitude']), axis=1)
+
 gdf = gpd.GeoDataFrame(ece_services_df_dev, geometry='geometry')
+
+gdf.drop(['Unnamed: 0', 'Town / City.1'], inplace=True, axis=1)
 
 #create GeoJSON
 gdf.to_file('services.geojson', driver='GeoJSON')
