@@ -18,12 +18,15 @@ import json
 
 #declare variables for initial use on app load
 lat = -41.87057
-lng = 173.29466
+lng = 168.29466
 
 prop_U5 = 0.059
 prop_att = 0.607
 
+
+tab_style = {'font-family': 'Nunito, sans-serif', 'font-size': '14px', 'color': 'rgb(35, 22, 115)', 'font-weight': '700'}
 style = dict(weight=0.25, opacity=1, color='blue', dashArray='3', fillOpacity=0.7)
+
 
 
 #open route service api key
@@ -38,8 +41,7 @@ headers = {
 }
 
 #territorial authorities
-tas = ['Area Outside Territorial Authority',
- 'Ashburton District',
+tas = ['Ashburton District',
  'Auckland',
  'Buller District',
  'Carterton District',
@@ -117,7 +119,7 @@ locales = dl.GeoJSON(
                 url='/assets/locales.geojson',
                 options=dict(style=style_function),
                 filter=(locale_filter_function),
-                hideout=dict(style=style, ta=tas),
+                hideout=dict(style=style, ta=tas, over="False"),
                 id='locales'
                 )
 
@@ -137,7 +139,7 @@ ta_sumary_df = pd.DataFrame.from_dict(ta_summary, orient='index')[['total_ece_pl
 ta_sumary_df.rename(columns={"total_ece_places": "places", "total_ece_pop": "pop", "overall_ece_demand": "demand"}, inplace=True)
 
 #create colour bar
-colorbar = dlx.categorical_colorbar(categories=['over demand', 'near', 'under', 'no data'], colorscale=['red', 'orange', 'green', 'grey'], width=300, height=30, position="topright", opacity=0.3)
+colorbar = dlx.categorical_colorbar(categories=['over demand', 'near', 'under', 'no people'], colorscale=['red', 'orange', 'green', 'grey'], width=300, height=30, position="topright", opacity=0.3)
 
 #helper function to create result card for a service
 def create_result_card(name, lat, lng, type, max_places, free, U2s):
@@ -193,9 +195,13 @@ app.layout = html.Div([
                         dbc.Col(html.P("National ECE demand: "), width=9),
                         dbc.Col(html.P(id='national-demand'), width=3)
                     ]),
+                    dbc.Row([
+                        dbc.Col(html.P("Localities over demand: "), width=9),
+                        dbc.Col(html.P(id='national-locales-over'), width=3)
+                    ]),
                     html.Hr(),
                     html.Div(id='national-table')
-                    ], label='National'),
+                    ], label='National', tab_style=tab_style),
                 dbc.Tab([
                     html.Div([
                     html.Hr(),
@@ -204,16 +210,19 @@ app.layout = html.Div([
                             dbc.Select(
                             id='ta-filter',
                             options=tas),
-                            width=9
+                            width=7
                             ),
+                        html.Br(),
+                        html.Br(),
                         dbc.Col(
-                            dbc.Button("Clear", id="clear-ta-btn"),
-                            width=3
+                            dbc.Switch(id='service-marker-filter', label='show services', value=False),
+                            width=5
                             )
                         ]),
                         dbc.Row(
-                            dbc.Switch(id='service-marker-filter', label='Show service markers', value=False)
+                            dbc.Button("Clear", id="clear-ta-btn")  
                         ),
+                        html.Hr(),
                         html.Div(id='results-card'),
                         html.Div(id="address-card"),
                         html.Div(id='search-results'),
@@ -222,7 +231,7 @@ app.layout = html.Div([
                         html.Div(id="marker_clicked"),
                         html.P(id='pop')
                         ])
-                ], label='Territorial Authority'),
+                ], label='Territorial Authority', tab_style=tab_style),
                 dbc.Tab([
                     html.Hr(),
                     dbc.Row([
@@ -253,7 +262,7 @@ app.layout = html.Div([
                             value=10)
                         ]),
                         html.Div(id='address-summary')
-                ], label='Address')]
+                ], label='Address', tab_style=tab_style)]
             )
             ], id="offcanvas", title="ECE Service Demand Visualiser", is_open=True, backdrop=False
         )]
@@ -277,6 +286,7 @@ app.layout = html.Div([
         [Output('national-capacity', 'children'),
          Output('national-population', 'children'),
          Output('national-demand', 'children'),
+         Output('national-locales-over', 'children'),
          Output('national-table', 'children')],
          Input('national-capacity', 'children')
 )
@@ -285,24 +295,32 @@ def national_view(capacity):
     national_capacity = 0
     national_pop = 0
     national_demand = 0
+    national_locales = 0
+    national_over_near = 0
+    national_under = 0
+
 
     for key, value in ta_summary.items():
         national_capacity = national_capacity + value['total_ece_places']
         national_pop = national_pop + value['total_ece_pop']
 
+        national_over_near = national_over_near + value['over_demand_locales'] + value['near_demand_locales']
+        national_under = national_under + value['under_demand_locales']
+
+        national_locales = national_locales + 1
+
+        
+
 
     national_demand = round(national_pop/national_capacity, 2)
 
-    ta_sumary_df.sort_values(by=['places'], ascending=False, inplace=True)
+    ta_sumary_df.sort_values(by=['demand'], ascending=False, inplace=True)
 
     table = dbc.Table.from_dataframe(ta_sumary_df, index=True)
 
 
-    return (national_capacity, national_pop, national_demand, table)
+    return (national_capacity, national_pop, national_demand, national_over_near, table)
 
-
-
-#TODO: zoom to TA when selected
 #update when TA is selected
 @app.callback(
         Output('map', 'viewport'),
@@ -332,16 +350,16 @@ def update_map(ta_filter):
     [State('locales', 'hideout'),
     State('marker', 'hideout')]
 )
-def update_hideout(ta, service_filter, poly_hideout, marker_hideout):
+def update_hideout(ta, service_filter, locale_hideout, marker_hideout):
 
-    poly_hideout['ta'] = ta
+    locale_hideout['ta'] = ta
 
     marker_hideout['ta'] = ta
     marker_hideout['show'] = str(service_filter)
     marker_hideout['search'] = ''
     marker_hideout['view'] = 'ta'
 
-    return(poly_hideout, marker_hideout)
+    return(locale_hideout, marker_hideout)
 
 #update ta summary
 @app.callback(
@@ -360,7 +378,7 @@ def update_ta_summary(ta):
             html.P('Overall ECE demand: ' +  str(summary_details['overall_ece_demand'])),
             html.P('Total localities: ' + str(summary_details['total_locales'])),
             html.P('Over demand locales: ' + str(summary_details['over_demand_locales'])),
-            html.P('Near demand locales: ' + str(summary_details['near_demand_localtes'])),
+            html.P('Near demand locales: ' + str(summary_details['near_demand_locales'])),
             html.P('Under demand locales: ' + str(summary_details['under_demand_locales'])),
             html.P('Total services: ' + str(summary_details['total_services'])),
         ])
@@ -370,12 +388,16 @@ def update_ta_summary(ta):
 
 #clear selected ta
 @app.callback(
-        Output('ta-filter', 'value'),
-        Input('clear-ta-btn', 'n_clicks')
+        [Output('ta-filter', 'value'),
+         Output('service-marker-filter', 'value'),
+         Output('results-card', 'children', allow_duplicate=True),
+         Output('search-results', 'children', allow_duplicate=True)],
+        Input('clear-ta-btn', 'n_clicks'),
+        prevent_initial_call=True
 )
 def clear_ta(n_clicks):
     if(n_clicks is not None):
-        return(None)
+        return(None, False, None, None)
 
 #polygon clicked
 @app.callback(
@@ -407,7 +429,12 @@ def poly_click(n_clicks, feature):
             total_services = total_services + 1
             cards.append(card)
 
-
+        if(feature['properties']['ece_capacity'] == 99):
+            demand = 'There are no services in this area to meet demand.'
+        elif(feature['properties']['ece_capacity'] == -1):
+            demand = "There is no population in this locality."
+        else:
+            demand = 'ECE demand: ' + str(feature['properties']['ece_capacity'])
 
         results_card = html.Div(
             dbc.Card(
@@ -418,7 +445,8 @@ def poly_click(n_clicks, feature):
                                 html.Div('Total Early Learning centres: ' + str(total_services)),
                                 html.Div('Total places available: ' + str(total_places)),
                                 html.Div('Estimated ECE pop: ' + str(feature['properties']['ece_pop'])),
-                                html.Div('ECE demand: ' + str(feature['properties']['ece_capacity']))
+                                html.Br(),
+                                html.Div(demand)
                             ]
                             )
                     ]

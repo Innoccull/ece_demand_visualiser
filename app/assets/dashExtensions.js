@@ -17,9 +17,9 @@ window.dashExtensions = Object.assign({}, window.dashExtensions, {
         else if (value > 0.9 && value < 1){
                 style.fillColor = '#FFA500';
         }
-        //0 demand means no population - color grey
-        else if (value == 0){
-                style.fillColor = '#808080';
+        //-1 demand means no population - color dark grey
+        else if (value == -1){
+                style.fillColor = '#000000';
         }
         //<90 demand - colour green
         else {
@@ -33,33 +33,26 @@ window.dashExtensions = Object.assign({}, window.dashExtensions, {
 
     ta_filter: function(feature, context) {
 
+        const over = context.hideout['over'];
         const selected = context.hideout['ta'];
+
         const poly_ta = feature.properties['ta'];
-        const value = feature.properties['ece_capacity'];
+        const demand = feature.properties['ece_capacity']
 
-        if (selected == 'Over demand'){
-                if (value > 1) {
+        if (over == "True"){
+                if(demand > 0.9){
                         return true
-                } else {
-                        return false
                 }
-
-        }
-
-        if (selected == 'Near demand'){
-                if (value > 0.9 && value < 1) {
-                        return true
-                } else {
-                        return false
-                }
-
-        }
+        } 
 
         if (poly_ta == selected){
                 return true
         } else {
                 return false
         }
+        
+
+        
     },
        
     marker_filter: function(feature, context){
