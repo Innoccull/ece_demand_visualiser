@@ -1,4 +1,5 @@
 import json
+import pandas as pd
 
 with open('locales.geojson') as fp:
     data = json.load(fp)
@@ -135,3 +136,8 @@ for ta in result:
 
 with open('ta_summary.json', 'w') as fp:
     json.dump(result, fp)
+
+#save as a csv
+ta_summary_df = pd.DataFrame(result)
+
+ta_summary_df.to_csv('data\\ta_summary.csv', encoding='utf-8')

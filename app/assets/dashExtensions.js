@@ -35,9 +35,12 @@ window.dashExtensions = Object.assign({}, window.dashExtensions, {
 
         const over = context.hideout['over'];
         const selected = context.hideout['ta'];
+        const view = context.hideout['view']
 
         const poly_ta = feature.properties['ta'];
         const demand = feature.properties['ece_capacity']
+
+       
 
         if (over == "True"){
                 if(demand > 0.9){
