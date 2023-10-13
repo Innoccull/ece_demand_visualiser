@@ -3,4 +3,5 @@ dash_bootstrap_components
 dash_leaflet
 geopy
 dash_extensions
+pandas
 gunicorn
