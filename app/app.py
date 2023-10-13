@@ -108,17 +108,6 @@ markers_gj = dl.GeoJSON(
                 id='marker'
                 )
 
-custom_icon = dict(
-    iconUrl='https://leafletjs.com/examples/custom-icons/leaf-green.png',
-    shadowUrl='https://leafletjs.com/examples/custom-icons/leaf-shadow.png',
-    iconSize=[38, 95],
-    shadowSize=[50, 64],
-    iconAnchor=[22, 94],
-    shadowAnchor=[4, 62],
-    popupAnchor=[-3, -76]
-)
-
-search_marker = dl.Marker(id='search-marker',position=[0,0], opacity=0, icon=custom_icon)
 
 #load locale summary data
 with open('app/assets/ta_summary.json') as fp:
@@ -257,7 +246,6 @@ app.layout = html.Div([
         dl.Map(children = [
             dl.TileLayer(), 
             markers_gj, 
-            search_marker,
             locales,
             colorbar],
            center = [-41.87057, 168.29466],

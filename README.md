@@ -1,8 +1,29 @@
 # ece_demand_visualiser
 
-https://datafinder.stats.govt.nz/data/?created_at.after=2023-01-13T16%3A40%3A52.957Z
+The early childhood education (ECE) demand visualiser joins together data from the Ministry of Education and Statistics New Zealand into an interactive visualisation of demand for ECE services in New Zealand. 
 
-To provide a visualisation of the demand on ece services in New Zealand.
+The application presents two views of ECE demand in New Zealand: national and locality.
 
-Users can:
-- view which communities are currently estimated to be over demand, under demand or nearing over demand
+The 'national view' shows: 
+- the overall demand for ECE services in New Zealand based on the estimated ECE population attending and the number of ECE places available in New Zealand
+- the ECE demand broken down and ranked by Territorial Authority
+
+![image info](./app_images/start.png)
+
+The user can select a territorial authority to have it visualised on the map. 
+
+![image info](./app_images/ta_selected.png)
+
+The 'locality view' shows the details for a specific territorial authority. Each Territorial Authority is broken down into localities (based on Statistics New Zealand data).
+
+![image info](./app_images/locality_selected.png)
+
+## How ECE demand is calculated
+
+ECE demand is calculated with the following equation: population / ece capacity
+
+Population data is obtained from the statistics New Zealand suburbs and localities 
+
+ECE capcity 
+
+
