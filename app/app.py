@@ -3,40 +3,19 @@ from dash import Dash, dcc, html, dash_table, Input, Output, ctx, callback, Stat
 from dash_extensions.javascript import assign, Namespace
 import dash_bootstrap_components as dbc
 import dash_leaflet as dl
-import requests
 import pandas as pd
-import geopy.distance
 import json
 import dash_leaflet.express as dlx
-import ast
 from ast import literal_eval
 
-import shapely
-from shapely import Polygon
-from shapely import wkt
-import json
 
-#declare variables for initial use on app load
-
-
+#declare variables for initial use on app loa
 prop_U5 = 0.059
 prop_att = 0.607
-
 
 tab_style = {'font-family': 'Nunito, sans-serif', 'font-size': '14px', 'color': 'rgb(35, 22, 115)', 'font-weight': '700'}
 style = dict(weight=0.25, opacity=1, color='blue', dashArray='3', fillOpacity=0.7)
 
-
-#open route service api key
-api_key = '5b3ce3597851110001cf6248794cc26b77c44bd6ba57adf491254f74'
-
-#calling with requests
-base_url = "https://api.openrouteservice.org/geocode/search?api_key="
-directions_url = "https://api.openrouteservice.org/v2/directions/driving-car?api_key="
-
-headers = {
-    'Accept': 'application/json, application/geo+json, application/gpx+xml, img/png; charset=utf-8',
-}
 
 #territorial authorities
 tas = ['Ashburton District',

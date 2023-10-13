@@ -1,3 +1,4 @@
 # ignore everything in data folder - too big to include
-*.csv
+data/
 *.geojson
+*.csv
