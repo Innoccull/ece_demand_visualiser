@@ -24,6 +24,6 @@ ECE demand is calculated with the following equation: population / ece capacity
 
 Population data is obtained from the statistics New Zealand suburbs and localities 
 
-ECE capcity 
+ECE capcity is obtained by summing up the ECE places that are available for each service. This information is made available by the Ministry of Education for each early learning service. 
 
 
