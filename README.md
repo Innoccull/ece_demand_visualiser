@@ -27,7 +27,7 @@ Localities will be shaded according to ece demand:
 - Green means a locality is under-demand
 - Grey means there is no population in that locality
 
-<video src="./app_images/test_vid.mp4" controls title="Title"></video>
+<video src="./app_images/test_vid.MP4" controls title="Title"></video>
 
 The user can choose to display markers for services within a locality.
 
