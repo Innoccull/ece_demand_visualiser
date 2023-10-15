@@ -9,17 +9,17 @@ The application presents two views of ECE demand in New Zealand: national and lo
 The national view shows the overall demand for ECE services in New Zealand based on the estimated ECE population and the number of ECE places available in early learning services in New Zealand.
 
 
-![image info](/app_images/start.png)
+![image info](/app_images/start.PNG)
 
 The national view also breaks down ece demand by New Zealand Terrirotial Authority (TA) to allow for more localised exploration. The user can select a TA from the table on the left to show that TA on the map and present a summary of ece demand for that TA in the top right. 
 
-![image info](/app_images/ta_selected.png)
+![image info](/app_images/ta_selected.PNG)
 
 ### Locality View
 
 The 'locality view' shows the details for specific localities within a territorial authority. Each territorial authority is broken down into localities that are obtained from Land Information New Zealand (LINZ).
 
-![image info](./app_images/ta_selected.png)
+![image info](./app_images/ta_selected.PNG)
 
 Localities will be shaded according to ece demand:
 - Red means a locality is over-demand
@@ -33,7 +33,7 @@ The user can choose to display markers for services within a locality.
 
 Clicking on a locality on the map will show details for that locality. This detail includes a summary of ece demand for that locality (total early learning centres, total places available, estimated ece population and ece demand) and a list of early learning services.
 
-![image info](./app_images/locality_selected_2.png)
+![image info](./app_images/locality_selected_2.PNG)
 
 
 ## ECE demand 
