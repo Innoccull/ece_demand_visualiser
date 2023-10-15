@@ -8,14 +8,9 @@ import json
 import dash_leaflet.express as dlx
 from ast import literal_eval
 
-
-#declare variables for initial use on app loa
-prop_U5 = 0.059
-prop_att = 0.607
-
+#declare custom styling to be used in the application
 tab_style = {'font-family': 'Nunito, sans-serif', 'font-size': '14px', 'color': 'rgb(35, 22, 115)', 'font-weight': '700'}
 style = dict(weight=0.25, opacity=1, color='blue', dashArray='3', fillOpacity=0.7)
-
 
 #territorial authorities
 tas = ['Ashburton District',
@@ -86,7 +81,6 @@ tas = ['Ashburton District',
 
 #declare javascript functions for managing geoJSON objects
 ns = Namespace('dashExtensions', 'default')
-
 style_function = ns('style_handle')
 locale_filter_function = ns('ta_filter')
 marker_filter_function = ns('marker_filter')
@@ -104,12 +98,11 @@ markers_gj = dl.GeoJSON(
                 url = '/assets/services.geojson',
                 cluster=False,
                 filter=(marker_filter_function),
-                hideout=dict(ta='', view='', show="False", search='', lat=0, lng=0, dist=0),
+                hideout=dict(ta='', view='', show="False", lat=0, lng=0, dist=0),
                 id='marker'
                 )
 
-
-#load locale summary data
+#load and process ta summary data
 with open('app/assets/ta_summary.json') as fp:
     ta_summary = json.load(fp)
 
@@ -152,6 +145,7 @@ def create_result_card(name, lat, lng, type, max_places, free, U2s):
 # stylesheet with the .dbc class
 app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP], suppress_callback_exceptions=True)
 
+# dash application layout
 app.layout = html.Div([
     html.Div(
         [
@@ -205,7 +199,7 @@ app.layout = html.Div([
                                     'font-size': '14px'
                                 }
                             )])
-                    ], label='National', tab_style=tab_style, tab_id='national_tab'),
+                    ], label='National', tab_id='national_tab'),
                 dbc.Tab([
                     html.Div([
                     html.Hr(),
@@ -235,7 +229,7 @@ app.layout = html.Div([
                         html.Div(id="marker_clicked"),
                         html.P(id='pop')
                         ])
-                ], label='Locality', tab_style=tab_style, tab_id='locality_tab')],
+                ], label='Locality', tab_id='locality_tab')],
                 id='tabs',
                 active_tab='national_tab'
             )
@@ -256,7 +250,7 @@ app.layout = html.Div([
 ])
 
 
-#national view
+# create national view of ece demand - populates the national view on load
 @app.callback(
         [Output('national-capacity', 'children'),
          Output('national-population', 'children'),
@@ -272,9 +266,11 @@ def national_view(capacity, selected_cell, derived_data):
 
     ta = None
 
+    #check if a table cell is selected in the ta table
     if(selected_cell is not None):
-        clicked_row = selected_cell['row']
 
+        #get the selected ta
+        clicked_row = selected_cell['row']
         ta = derived_data[clicked_row]['TA']
 
     national_capacity = 0
@@ -284,6 +280,7 @@ def national_view(capacity, selected_cell, derived_data):
     national_over_near = 0
     national_under = 0
 
+    #iterate through all entries in ta summary to add up a national view of ece demand
     for key, value in ta_summary.items():
         national_capacity = national_capacity + value['total_ece_places']
         national_pop = national_pop + value['total_ece_pop']
@@ -297,7 +294,7 @@ def national_view(capacity, selected_cell, derived_data):
 
     return (national_capacity, national_pop, national_demand, national_over_near, ta)
 
-#ta selected - update polygons and markers
+# ta is selected or service marker filter is changed - update the visibility of ta locales and service markers via the geojson layer hideouts
 @app.callback(
     [Output('locales', 'hideout'),
     Output('marker', 'hideout')],
@@ -309,16 +306,17 @@ def national_view(capacity, selected_cell, derived_data):
 )
 def update_hideout(ta, service_filter, locale_hideout, marker_hideout):
 
+    # update locale hideout to selected ta
     locale_hideout['ta'] = ta
 
+    # update marker hideout to selected ta and marker filter setting
     marker_hideout['ta'] = ta
     marker_hideout['show'] = str(service_filter)
-    marker_hideout['search'] = ''
     marker_hideout['view'] = 'ta'
 
     return(locale_hideout, marker_hideout)
 
-#update ta summary
+#ta is selected - update ta summary in top right
 @app.callback(
     Output('locale-stats', 'children'),
     Input('ta-filter', 'value'),
@@ -326,9 +324,11 @@ def update_hideout(ta, service_filter, locale_hideout, marker_hideout):
 )
 def update_ta_summary(ta):
 
+    #check if ta is selected
     if (ta is not None):
         summary_details = ta_summary[ta]
 
+        # create ta_summary html
         result = html.Div(children=[
             html.P(ta),
             html.P("Total ECE pop: " + str(summary_details['total_ece_pop'])),
@@ -344,7 +344,7 @@ def update_ta_summary(ta):
     else:
         return ('Select a territorial authority')
 
-#clear selected ta
+# clear selected ta
 @app.callback(
         [Output('ta-filter', 'value'),
          Output('service-marker-filter', 'value'),
@@ -358,7 +358,7 @@ def clear_ta(n_clicks):
     if(n_clicks is not None):
         return(None, False, None, None, 'national_tab')
 
-#polygon clicked
+# locality selected - calculae the ece demand for the selected locality and provide the results to display
 @app.callback(
     [Output('results-card', 'children', allow_duplicate=True),
      Output('search-results', 'children', allow_duplicate=True),
@@ -367,16 +367,15 @@ def clear_ta(n_clicks):
     State('locales', 'clickData'),
     prevent_initial_call=True
 )
-def poly_click(n_clicks, feature):
+def locality_selected(n_clicks, feature):
 
     results_card = ''
     cards = []
 
-    #check if a ta is selected
+    #check if a locality is selected
     if (feature is not None):
 
-
-        #get the services for this ta
+        #get the services for this locality
         services = feature['properties']['ece_services']
 
         total_places = 0
@@ -390,6 +389,7 @@ def poly_click(n_clicks, feature):
             total_services = total_services + 1
             cards.append(card)
 
+        #check the overall ece demand for the locality
         if(feature['properties']['ece_capacity'] == 99):
             demand = 'There are no services in this area to meet demand.'
         elif(feature['properties']['ece_capacity'] == -1):
@@ -397,6 +397,7 @@ def poly_click(n_clicks, feature):
         else:
             demand = 'ECE demand: ' + str(feature['properties']['ece_capacity'])
 
+        #create overall ece demand result card for the locality
         results_card = html.Div(
             dbc.Card(
                     [
