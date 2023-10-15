@@ -9,11 +9,11 @@ The application presents two views of ECE demand in New Zealand: national and lo
 The national view shows the overall demand for ECE services in New Zealand based on the estimated ECE population and the number of ECE places available in early learning services in New Zealand.
 
 
-![image info](./app_images/start.png)
+![image info](/app_images/start.png)
 
 The national view also breaks down ece demand by New Zealand Terrirotial Authority (TA) to allow for more localised exploration. The user can select a TA from the table on the left to show that TA on the map and present a summary of ece demand for that TA in the top right. 
 
-![image info](./app_images/ta_selected.png)
+![image info](/app_images/ta_selected.png)
 
 ### Locality View
 
