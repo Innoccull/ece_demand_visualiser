@@ -37,7 +37,7 @@ locales_df = locales_df.loc[locales_df['type'] != 'Inland Bay']
 #function to calculate the ece capacity for a given locale
 #inputs are a locale population, the ta for the locale and the polygon for the locale
 #output: json object with population, ece demand and service details for the locale
-def ece_capacity(locale_pop, locale_ta, locale_poly):
+def ece_demand(locale_pop, locale_ta, locale_poly):
     ece_capacity = 0
     ece_services = []
 
@@ -98,7 +98,7 @@ def ece_capacity(locale_pop, locale_ta, locale_poly):
         'ece_pop' : ece_pop,
         'ece_places' : ece_capacity,
         'ece_services' : ece_services,
-        'ece_capacity' : ece_demand        
+        'ece_demand' : ece_demand        
     }
             
     #returns the overall capacity and list of services in that locale
@@ -107,7 +107,9 @@ def ece_capacity(locale_pop, locale_ta, locale_poly):
 print("calculating ece capacity and demand")
 
 #calculate ece capacity for each locale - this is the total ece places available
-locales_df["ece_capacity"] = locales_df.apply(lambda row: ece_capacity(row['population_estimate'], row['ta'],row['WKT']), axis =1)
+locales_df["ece_capacity"] = locales_df.apply(lambda row: ece_demand(row['population_estimate'], row['ta'],row['WKT']), axis =1)
+
+print("there are" + str(len(locales_df)) + "localities.")
 
 print("saving ece demand to csv")
 
