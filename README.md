@@ -8,34 +8,29 @@ The application presents two views of ECE demand in New Zealand: national and lo
 
 The national view shows the overall demand for ECE services in New Zealand based on the estimated ECE population and the number of ECE places available in early learning services in New Zealand.
 
+![image info](/app_images/national_view.PNG)
 
-![image info](/app_images/start.PNG)
+The national view also breaks down ece demand by New Zealand Terrirotial Authority (TA) to allow for more localised exploration. The user can select a TA from the table on the left - this will show that TA on the map and generate a summary of ece demand for that TA in the top right. 
 
-The national view also breaks down ece demand by New Zealand Terrirotial Authority (TA) to allow for more localised exploration. The user can select a TA from the table on the left to show that TA on the map and present a summary of ece demand for that TA in the top right. 
-
-![image info](/app_images/ta_selected.PNG)
+![Alt text](app_images/select_ta.gif)
 
 ### Locality View
 
 The locality view shows the details for specific localities within a TA. Each TA is broken down into localities that are obtained from Land Information New Zealand (LINZ).
 
-![image info](./app_images/ta_selected.PNG)
-
 Localities are shaded according to ece demand:
 - Red means a locality is over-demand
 - Orange means a locality is near-demand
-- Green means a locality is under-demand
+- Green means a locality is meeting demand
 - Grey means there is no population in that locality
-
 
 Clicking on a locality on the map will show details for that locality. This detail includes a summary of ece demand for that locality (total early learning centres, total places available, estimated ece population and ece demand) and a list of early learning services that are within that locality.
 
-![image info](./app_images/locality_selected_2.PNG)
-
+![Alt text](app_images/select_locality.gif)
 
 ## ECE demand 
 
-ECE demand is a measure of how well demand for early learning services is being met within a specific location. It is calculated with the following equation: 
+ECE demand is a measure of how well demand for early learning services is being met within a specific location. It is calculated according to the following equation: 
 
 > ece demand = ece population / ece capacity
 

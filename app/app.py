@@ -159,7 +159,7 @@ app.layout = html.Div([
                 dbc.Tab([
                     html.Hr(),
                     dbc.Row([
-                        dbc.Col(html.P("National ECE capacity "), width=9, style=style),
+                        dbc.Col(html.P("National ECE capacity "), width=9),
                         dbc.Col(html.P(id='national-capacity'), width=3)
                     ]),
                     dbc.Row([
